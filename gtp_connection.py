@@ -413,22 +413,27 @@ class GtpConnection():
             color = GoBoardUtil.color_to_int(board_color)
             self.debug_msg("Board:\n{}\nko: {}\n".format(str(self.board.get_twoD_board()),
                                                           self.board.ko_constraint))
-            #move = self.go_engine.get_move(self.board, color)
-            moves, probs = GoBoardUtilGo4.generate_moves_with_feature_based_probs(self.board)
-            priorKnowledgeList = GoBoardUtilGo4.prior_knowledge_initialization(moves, probs)
-            for move in priorKnowledgeList:
-            # jank? need to print PASS as Pass
-                if move[0] == 'PASS':
-                    move[0] = 'pass'
-                else:
-                    move[0] = GoBoardUtil.format_point(self.board._point_to_coord(move[0]))
-       
-            # sort list by winrate, breaking ties alphabetically 
-            sortedList = sorted(priorKnowledgeList, key=lambda x: x[0])
-            sortedList = sorted(sortedList, key=lambda x: x[3], reverse=True)
-            # get the best move from prior knowledge             
-            move = sortedList[0][0]
-            self.respond(move)
+            move = self.go_engine.get_move(self.board, color)
+            if move is None:
+                self.respond("pass")
+                return
+
+            if not self.board.check_legal(move, color):
+                move = self.board._point_to_coord(move)
+                board_move = GoBoardUtil.format_point(move)
+                self.respond("Illegal move: {}".format(board_move))
+                raise RuntimeError("Illegal move given by engine")
+
+            # move is legal; play it
+            self.board.move(move,color)
+
+            self.debug_msg("Move: {}\nBoard: \n{}\n".format(move, str(self.board.get_twoD_board())))
+            move = self.board._point_to_coord(move)
+            board_move = GoBoardUtil.format_point(move)
+            self.respond(board_move)
+        except Exception as e:
+            self.respond('Error: {}'.format(str(e)))
+            raise
 
         except Exception as e:
             self.respond('Error: {}'.format(str(e)))
