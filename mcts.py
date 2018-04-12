@@ -155,7 +155,7 @@ class MCTS(object):
         node = self._root 
         # This will be True only once for the root
         if not node._expanded:
-            if self.in_tree_knowledge is not None:
+            if self.in_tree_knowledge == 'probabilistic':
                 node.expandWithKnowledge(board, color)
             else: 
                 node.expand(board, color)
@@ -172,7 +172,7 @@ class MCTS(object):
             node = next_node
         assert node.is_leaf()
         if not node._expanded:
-            if self.in_tree_knowledge is not None:
+            if self.in_tree_knowledge == 'probabilistic':
                 node.expandWithKnowledge
             else:
                 node.expand(board, color)
